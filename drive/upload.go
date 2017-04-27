@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+  "crypto/md5"
 )
 
 type UploadArgs struct {
@@ -144,6 +145,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 }
 
 func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
+  localMd5 := md5sum(args.Path)
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return nil, 0, err
@@ -184,14 +186,18 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
 	started := time.Now()
 
-	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
+	f, err := self.service.Files.Create(dstFile).SupportsTeamDrives(true).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
 		if isTimeoutError(err) {
 			return nil, 0, fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
 		}
 		return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
 	}
-
+  if f.Md5Checksum != localMd5 {
+			return nil, 0, fmt.Errorf("Failed to verify uploaded file %s, local checksum %s, remote checksum %s", args.Path, localMd5, f.Md5Checksum)
+  } else {
+    fmt.Fprintf(args.Out, "Verified %s from %s, local checksum %s, remote checksum %s\n", f.Id, args.Path, localMd5, f.Md5Checksum)
+  }
 	// Calculate average upload rate
 	rate := calcRate(f.Size, started, time.Now())
 
@@ -239,7 +245,7 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 	fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
 	started := time.Now()
 
-	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
+	f, err := self.service.Files.Create(dstFile).SupportsTeamDrives(true).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
 		if isTimeoutError(err) {
 			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
@@ -260,4 +266,16 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 		fmt.Fprintf(args.Out, "File is readable by anyone at %s\n", f.WebContentLink)
 	}
 	return nil
+}
+
+func md5sum(path string) string {
+	h := md5.New()
+	f, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	io.Copy(h, f)
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

@@ -65,7 +65,7 @@ func NewAccessTokenClient(clientId, clientSecret, accessToken string) *http.Clie
 	)
 }
 
-func NewServiceAccountClient(serviceAccountFile string) (*http.Client, error) {
+func NewServiceAccountClient(serviceAccountFile string, subject string) (*http.Client, error) {
 	content, exists, err := ReadFile(serviceAccountFile)
 	if(!exists) {
 		return nil, fmt.Errorf("Service account filename %q not found", serviceAccountFile)
@@ -79,6 +79,7 @@ func NewServiceAccountClient(serviceAccountFile string) (*http.Client, error) {
 	if(err != nil) {
 		return nil, err
 	}
+  conf.Subject = subject
 	return conf.Client(oauth2.NoContext), nil
 }
 

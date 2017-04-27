@@ -2,25 +2,26 @@ package drive
 
 import (
 	"fmt"
-	"google.golang.org/api/drive/v3"
 	"path/filepath"
+	"google.golang.org/api/drive/v3"
 )
 
 func (self *Drive) newPathfinder() *remotePathfinder {
 	return &remotePathfinder{
-		service: self.service.Files,
-		files:   make(map[string]*drive.File),
+		service:     self.service.Files,
+		teamService: self.service.Teamdrives,
+		files:       make(map[string]*drive.File),
 	}
 }
 
 type remotePathfinder struct {
-	service *drive.FilesService
-	files   map[string]*drive.File
+	service     *drive.FilesService
+	teamService *drive.TeamdrivesService
+	files       map[string]*drive.File
 }
 
 func (self *remotePathfinder) absPath(f *drive.File) (string, error) {
 	name := f.Name
-
 	if len(f.Parents) == 0 {
 		return name, nil
 	}
@@ -33,12 +34,20 @@ func (self *remotePathfinder) absPath(f *drive.File) (string, error) {
 			return "", err
 		}
 
+		if len(parent.Parents) == 0 && parent.Name == "Team Drive" {
+			teamDrive, err := self.teamService.Get(parent.Id).Fields("id", "name").Do()
+			if err != nil {
+				return "", err
+			}
+			parent.Name = teamDrive.Name
+		}
+
+		path = append([]string{parent.Name}, path...)
+
 		// Stop when we find the root dir
 		if len(parent.Parents) == 0 {
 			break
 		}
-
-		path = append([]string{parent.Name}, path...)
 		f = parent
 	}
 
@@ -53,7 +62,7 @@ func (self *remotePathfinder) getParent(id string) (*drive.File, error) {
 	}
 
 	// Fetch file from drive
-	f, err := self.service.Get(id).Fields("id", "name", "parents").Do()
+	f, err := self.service.Get(id).Fields("id", "name", "parents").SupportsTeamDrives(true).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get file: %s", err)
 	}

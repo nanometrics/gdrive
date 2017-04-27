@@ -8,7 +8,7 @@ import (
 )
 
 const Name = "gdrive"
-const Version = "2.1.0"
+const Version = "2.1.1"
 
 const DefaultMaxFiles = 30
 const DefaultMaxChanges = 100
@@ -44,6 +44,11 @@ func main() {
 			Name:        "serviceAccount",
 			Patterns:    []string{"--service-account"},
 			Description: "Oauth service account filename, used for server to server communication without user interaction (filename path is relative to config dir)",
+		},
+		cli.StringFlag{
+			Name:        "subject",
+			Patterns:    []string{"--subject"},
+			Description: "Oauth service account subject, used to impersonate that user account",
 		},
 	}
 
@@ -94,6 +99,22 @@ func main() {
 						Name:        "sizeInBytes",
 						Patterns:    []string{"--bytes"},
 						Description: "Size in bytes",
+						OmitValue:   true,
+					},
+				),
+			},
+		},
+		&cli.Handler{
+			Pattern:     "[global] teamlist [options]",
+			Description: "List team drives",
+			Callback:    teamListHandler,
+			FlagGroups: cli.FlagGroups{
+				cli.NewFlagGroup("global", globalFlags...),
+				cli.NewFlagGroup("options",
+					cli.BoolFlag{
+						Name:        "skipHeader",
+						Patterns:    []string{"--no-header"},
+						Description: "Dont print the header",
 						OmitValue:   true,
 					},
 				),

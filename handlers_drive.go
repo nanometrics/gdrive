@@ -34,6 +34,15 @@ func listHandler(ctx cli.Context) {
 	checkErr(err)
 }
 
+func teamListHandler(ctx cli.Context) {
+	args := ctx.Args()
+	err := newDrive(args).TeamList(drive.TeamListArgs{
+		Out:        os.Stdout,
+		SkipHeader: args.Bool("skipHeader"),
+	})
+	checkErr(err)
+}
+
 func listChangesHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).ListChanges(drive.ListChangesArgs{
@@ -357,7 +366,7 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
 
 	if args.String("serviceAccount") != "" {
 		serviceAccountPath := ConfigFilePath(configDir, args.String("serviceAccount"))
-		serviceAccountClient, err := auth.NewServiceAccountClient(serviceAccountPath)
+		serviceAccountClient, err := auth.NewServiceAccountClient(serviceAccountPath, args.String("subject"))
 		if err != nil {
 			return nil, err
 		}
