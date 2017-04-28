@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/prasmussen/gdrive/cli"
+	"github.com/nanometrics/gdrive/cli"
 )
 
 const Name = "gdrive"
@@ -233,6 +233,11 @@ func main() {
 						Name:        "parent",
 						Patterns:    []string{"-p", "--parent"},
 						Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
+					},
+					cli.StringFlag{
+						Name:        "folder",
+						Patterns:    []string{"--folder"},
+						Description: "Folder path, used to upload file to a specific directory",
 					},
 					cli.StringFlag{
 						Name:        "name",

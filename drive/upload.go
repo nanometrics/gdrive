@@ -1,15 +1,17 @@
 package drive
 
 import (
+	"crypto/md5"
 	"fmt"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/googleapi"
 	"io"
 	"mime"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
-  "crypto/md5"
+
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 )
 
 type UploadArgs struct {
@@ -19,6 +21,7 @@ type UploadArgs struct {
 	Name        string
 	Description string
 	Parents     []string
+	Folder      string
 	Mime        string
 	Recursive   bool
 	Share       bool
@@ -30,6 +33,14 @@ type UploadArgs struct {
 func (self *Drive) Upload(args UploadArgs) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
+	}
+
+	if args.Folder != "" {
+		parentId, err := self.parentFromFolder(args.Folder)
+		if err != nil {
+			return err
+		}
+		args.Parents = []string{parentId}
 	}
 
 	// Ensure that none of the parents are sync dirs
@@ -145,7 +156,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 }
 
 func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
-  localMd5 := md5sum(args.Path)
+	localMd5 := md5sum(args.Path)
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return nil, 0, err
@@ -193,11 +204,11 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 		}
 		return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
 	}
-  if f.Md5Checksum != localMd5 {
-			return nil, 0, fmt.Errorf("Failed to verify uploaded file %s, local checksum %s, remote checksum %s", args.Path, localMd5, f.Md5Checksum)
-  } else {
-    fmt.Fprintf(args.Out, "Verified %s from %s, local checksum %s, remote checksum %s\n", f.Id, args.Path, localMd5, f.Md5Checksum)
-  }
+	if f.Md5Checksum != localMd5 {
+		return nil, 0, fmt.Errorf("Failed to verify uploaded file %s, local checksum %s, remote checksum %s", args.Path, localMd5, f.Md5Checksum)
+	} else {
+		fmt.Fprintf(args.Out, "Verified %s from %s, local checksum %s, remote checksum %s\n", f.Id, args.Path, localMd5, f.Md5Checksum)
+	}
 	// Calculate average upload rate
 	rate := calcRate(f.Size, started, time.Now())
 
@@ -278,4 +289,52 @@ func md5sum(path string) string {
 
 	io.Copy(h, f)
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func (self *Drive) parentFromFolder(folderPath string) (string, error) {
+	// fmt.Printf("Looking for folder path %s\n", folderPath)
+	parts := strings.Split(folderPath, "/")
+	parentId := ""
+	for _, name := range parts {
+		if name == "" {
+			continue
+		}
+		// fmt.Printf("Looking for %s\n", name)
+		if parentId == "" {
+			if strings.EqualFold("mydrive", strings.Replace(name, " ", "", -1)) {
+				parentId = "root"
+			} else {
+				// fmt.Printf("Looking for team drive %s\n", name)
+				result, err := self.service.Teamdrives.List().Fields("teamDrives(id,name)").Do()
+				if err != nil {
+					return "", err
+				}
+				for _, drive := range result.TeamDrives {
+					// fmt.Printf("Checking team drive %s\n", drive.Name)
+					if drive.Name == name {
+						parentId = drive.Id
+						break
+					}
+				}
+			}
+			if parentId == "" {
+				return "", fmt.Errorf("No top level folder matched name %s", name)
+			}
+			// fmt.Printf("Found parent %s for %s\n", parentId, name)
+		} else {
+			query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and name = '%s' and '%s' in parents", name, parentId)
+			// fmt.Printf("Query: %s\n", query)
+			result, err := self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(query).Fields("files(id,name)").Do()
+			if err != nil {
+				return "", err
+			}
+			if len(result.Files) == 0 {
+				return "", fmt.Errorf("No folders matched name %s", name)
+			}
+			parentId = result.Files[0].Id
+			// fmt.Printf("Found parent %s for %s\n", parentId, name)
+		}
+	}
+	// fmt.Printf("Parent %s for %s\n", parentId, folderPath)
+	return parentId, nil
 }

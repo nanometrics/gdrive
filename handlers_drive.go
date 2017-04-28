@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/prasmussen/gdrive/auth"
-	"github.com/prasmussen/gdrive/cli"
-	"github.com/prasmussen/gdrive/drive"
+	"github.com/nanometrics/gdrive/auth"
+	"github.com/nanometrics/gdrive/cli"
+	"github.com/nanometrics/gdrive/drive"
 )
 
 const ClientId = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
@@ -130,6 +130,7 @@ func uploadHandler(ctx cli.Context) {
 		Name:        args.String("name"),
 		Description: args.String("description"),
 		Parents:     args.StringSlice("parent"),
+		Folder:      args.String("folder"),
 		Mime:        args.String("mime"),
 		Recursive:   args.Bool("recursive"),
 		Share:       args.Bool("share"),
