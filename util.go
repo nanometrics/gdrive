@@ -1,10 +1,8 @@
 package main
 
 import (
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -75,16 +73,4 @@ func writeJson(path string, data interface{}) error {
 	}
 
 	return os.Rename(tmpFile, path)
-}
-
-func md5sum(path string) string {
-	h := md5.New()
-	f, err := os.Open(path)
-	if err != nil {
-		return ""
-	}
-	defer f.Close()
-
-	io.Copy(h, f)
-	return fmt.Sprintf("%x", h.Sum(nil))
 }

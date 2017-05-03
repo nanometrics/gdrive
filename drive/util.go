@@ -1,7 +1,9 @@
 package drive
 
 import (
+	"crypto/md5"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -166,4 +168,16 @@ func openFile(path string) (*os.File, os.FileInfo, error) {
 	}
 
 	return f, info, nil
+}
+
+func Md5sum(path string) string {
+	h := md5.New()
+	f, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	io.Copy(h, f)
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

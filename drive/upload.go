@@ -1,7 +1,6 @@
 package drive
 
 import (
-	"crypto/md5"
 	"fmt"
 	"io"
 	"mime"
@@ -156,7 +155,10 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 }
 
 func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
-	localMd5 := md5sum(args.Path)
+	md5Channel := make(chan string)
+	go func() {
+		md5Channel <- Md5sum(args.Path)
+	}()
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return nil, 0, err
@@ -204,11 +206,11 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 		}
 		return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
 	}
+	localMd5 := <-md5Channel
 	if f.Md5Checksum != localMd5 {
-		return nil, 0, fmt.Errorf("Failed to verify uploaded file %s, local checksum %s, remote checksum %s", args.Path, localMd5, f.Md5Checksum)
-	} else {
-		fmt.Fprintf(args.Out, "Verified %s from %s, local checksum %s, remote checksum %s\n", f.Id, args.Path, localMd5, f.Md5Checksum)
+		return nil, 0, fmt.Errorf("Failed to verify uploaded file %s from %s, local checksum %s, remote checksum %s", f.Id, args.Path, localMd5, f.Md5Checksum)
 	}
+
 	// Calculate average upload rate
 	rate := calcRate(f.Size, started, time.Now())
 
@@ -277,18 +279,6 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 		fmt.Fprintf(args.Out, "File is readable by anyone at %s\n", f.WebContentLink)
 	}
 	return nil
-}
-
-func md5sum(path string) string {
-	h := md5.New()
-	f, err := os.Open(path)
-	if err != nil {
-		return ""
-	}
-	defer f.Close()
-
-	io.Copy(h, f)
-	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 func (self *Drive) parentFromFolder(folderPath string) (string, error) {
