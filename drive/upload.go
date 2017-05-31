@@ -98,15 +98,22 @@ func (self *Drive) uploadRecursive(args UploadArgs) error {
 	if err != nil {
 		return fmt.Errorf("Failed stat file: %s", err)
 	}
-
 	if info.IsDir() {
 		args.Name = ""
-		return self.uploadDirectory(args)
+		err = self.uploadDirectory(args)
 	} else if info.Mode().IsRegular() {
-		_, _, err := self.uploadFile(args)
+		_, _, err = self.uploadFile(args)
+	}
+	if err != nil {
 		return err
 	}
-
+	if args.Delete {
+		err = os.Remove(args.Path)
+		if err != nil {
+			return fmt.Errorf("Failed to remove: %s", err)
+		}
+		fmt.Fprintf(args.Out, "Removed %s\n", args.Path)
+	}
 	return nil
 }
 
@@ -115,20 +122,27 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 	if err != nil {
 		return err
 	}
-
 	// Close file on function exit
 	defer srcFile.Close()
 
-	fmt.Fprintf(args.Out, "Creating directory %s\n", srcFileInfo.Name())
-	// Make directory on drive
-	f, err := self.mkdir(MkdirArgs{
-		Out:         args.Out,
-		Name:        srcFileInfo.Name(),
-		Parents:     args.Parents,
-		Description: args.Description,
-	})
+	// check if directory exists
+	id, err := self.existingFolderId(args.Parents[0], srcFileInfo.Name())
 	if err != nil {
 		return err
+	}
+	if id == "" {
+		fmt.Fprintf(args.Out, "Creating directory %s\n", srcFileInfo.Name())
+		// Make directory on drive
+		f, err := self.mkdir(MkdirArgs{
+			Out:         args.Out,
+			Name:        srcFileInfo.Name(),
+			Parents:     args.Parents,
+			Description: args.Description,
+		})
+		if err != nil {
+			return err
+		}
+		id = f.Id
 	}
 
 	// Read files from directory
@@ -141,7 +155,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 		// Copy args and set new path and parents
 		newArgs := args
 		newArgs.Path = filepath.Join(args.Path, name)
-		newArgs.Parents = []string{f.Id}
+		newArgs.Parents = []string{id}
 		newArgs.Description = ""
 
 		// Upload
@@ -186,6 +200,18 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 
 	// Set parent folders
 	dstFile.Parents = args.Parents
+
+	// if file exists with same name and checksum, skip upload
+	existingFile, err := self.existingFile(dstFile.Parents[0], dstFile.Name)
+	if err != nil {
+		return nil, 0, err
+	}
+	if existingFile != nil {
+		localMd5 := <-md5Channel
+		if localMd5 == existingFile.Md5Checksum {
+			return existingFile, 0, nil
+		}
+	}
 
 	// Chunk size option
 	chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
@@ -327,4 +353,29 @@ func (self *Drive) parentFromFolder(folderPath string) (string, error) {
 	}
 	// fmt.Printf("Parent %s for %s\n", parentId, folderPath)
 	return parentId, nil
+}
+
+func (self *Drive) existingFolderId(parentId string, name string) (string, error) {
+	query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and name = '%s' and '%s' in parents", name, parentId)
+	result, err := self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(query).Fields("files(id,name)").Do()
+	if err != nil {
+		return "", err
+	}
+	if len(result.Files) == 0 {
+		return "", nil
+	}
+	folderId := result.Files[0].Id
+	return folderId, nil
+}
+
+func (self *Drive) existingFile(parentId string, name string) (*drive.File, error) {
+	query := fmt.Sprintf("name = '%s' and '%s' in parents", name, parentId)
+	result, err := self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(query).Fields("files(id,name,md5Checksum)").Do()
+	if err != nil {
+		return nil, err
+	}
+	if len(result.Files) == 0 {
+		return nil, nil
+	}
+	return result.Files[0], nil
 }
