@@ -451,10 +451,6 @@ func conflictResolution(args cli.Arguments) drive.ConflictResolution {
 }
 
 func checkUploadArgs(args cli.Arguments) {
-	if args.Bool("recursive") && args.Bool("delete") {
-		ExitF("--delete is not allowed for recursive uploads")
-	}
-
 	if args.Bool("recursive") && args.Bool("share") {
 		ExitF("--share is not allowed for recursive uploads")
 	}

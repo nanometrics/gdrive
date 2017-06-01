@@ -71,7 +71,11 @@ func (self *Drive) Upload(args UploadArgs) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
+	if rate == 0 {
+		fmt.Fprintf(args.Out, "Skipped %s, already exists\n", f.Id)
+	} else {
+		fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
+	}
 
 	if args.Share {
 		err = self.shareAnyoneReader(f.Id)
@@ -101,11 +105,19 @@ func (self *Drive) uploadRecursive(args UploadArgs) error {
 	if info.IsDir() {
 		args.Name = ""
 		err = self.uploadDirectory(args)
+		if err != nil {
+			return err
+		}
 	} else if info.Mode().IsRegular() {
-		_, _, err = self.uploadFile(args)
-	}
-	if err != nil {
-		return err
+		f, rate, err := self.uploadFile(args)
+		if err != nil {
+			return err
+		}
+		if rate == 0 {
+			fmt.Fprintf(args.Out, "Skipped %s (%s), already exists\n", args.Path, f.Id)
+		} else {
+			fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
+		}
 	}
 	if args.Delete {
 		err = os.Remove(args.Path)
@@ -143,6 +155,8 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 			return err
 		}
 		id = f.Id
+	} else {
+		fmt.Fprintf(args.Out, "Using existing directory %s (%s)\n", srcFileInfo.Name(), id)
 	}
 
 	// Read files from directory
