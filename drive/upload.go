@@ -29,6 +29,10 @@ type UploadArgs struct {
 	Timeout     time.Duration
 }
 
+const maxRetries = 5
+const timeoutRetryDelay = 30 * time.Second
+const errorRetryDelay = 5 * time.Second
+
 func (self *Drive) Upload(args UploadArgs) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
@@ -227,24 +231,39 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 		}
 	}
 
-	// Chunk size option
 	chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
-
-	// Wrap file in progress reader
-	progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
-
-	// Wrap reader in timeout reader
-	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
-
 	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
 	started := time.Now()
-
-	f, err := self.service.Files.Create(dstFile).SupportsTeamDrives(true).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
-	if err != nil {
-		if isTimeoutError(err) {
-			return nil, 0, fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
+	var f *drive.File
+	retries := 0
+	for {
+		// Wrap file in progress reader
+		progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
+		// Wrap reader in timeout reader
+		reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
+		f, err = self.service.Files.Create(dstFile).SupportsTeamDrives(true).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
+		if err != nil {
+			if isTimeoutError(err) {
+				retries++
+				if retries > maxRetries {
+					return nil, 0, fmt.Errorf("Failed to upload after %d timeout retries: %s", retries, err)
+				}
+				fmt.Fprintf(args.Out, "Retrying in 30 s after timeout: %s\n", err.Error())
+				time.Sleep(timeoutRetryDelay)
+			} else if isBackendOrRateLimitError(err) {
+				retries++
+				if retries > maxRetries {
+					return nil, 0, fmt.Errorf("Failed to upload after %d error retries: %s", retries, err)
+				}
+				fmt.Fprintf(args.Out, "Retrying in 5 s after error: %s\n", err.Error())
+				time.Sleep(errorRetryDelay)
+			} else {
+				return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
+			}
+		} else {
+			break
 		}
-		return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
+		srcFile.Seek(0, 0)
 	}
 	localMd5 := <-md5Channel
 	if f.Md5Checksum != localMd5 {
@@ -352,7 +371,7 @@ func (self *Drive) parentFromFolder(folderPath string) (string, error) {
 			}
 			// fmt.Printf("Found parent %s for %s\n", parentId, name)
 		} else {
-			query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and name = '%s' and '%s' in parents", name, parentId)
+			query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and name = '%s' and '%s' in parents", escapeName(name), parentId)
 			// fmt.Printf("Query: %s\n", query)
 			result, err := self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(query).Fields("files(id,name)").Do()
 			if err != nil {
@@ -370,26 +389,49 @@ func (self *Drive) parentFromFolder(folderPath string) (string, error) {
 }
 
 func (self *Drive) existingFolderId(parentId string, name string) (string, error) {
-	query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and name = '%s' and '%s' in parents", name, parentId)
-	result, err := self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(query).Fields("files(id,name)").Do()
+	query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and name = '%s' and '%s' in parents", escapeName(name), parentId)
+	file, err := self.fileQuery(query)
 	if err != nil {
 		return "", err
 	}
-	if len(result.Files) == 0 {
+	if file == nil {
 		return "", nil
 	}
-	folderId := result.Files[0].Id
-	return folderId, nil
+	return file.Id, nil
 }
 
 func (self *Drive) existingFile(parentId string, name string) (*drive.File, error) {
-	query := fmt.Sprintf("name = '%s' and '%s' in parents", name, parentId)
-	result, err := self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(query).Fields("files(id,name,md5Checksum)").Do()
-	if err != nil {
-		return nil, err
+	query := fmt.Sprintf("name = '%s' and '%s' in parents", escapeName(name), parentId)
+	return self.fileQuery(query)
+}
+
+func (self *Drive) fileQuery(query string) (*drive.File, error) {
+	var result *drive.FileList
+	retries := 0
+	for {
+		var err error
+		result, err = self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(query).Fields("files(id,name,md5Checksum)").Do()
+		if err != nil {
+			if isBackendOrRateLimitError(err) {
+				retries++
+				if retries > maxRetries {
+					return nil, fmt.Errorf("Error finding file: %s", err.Error())
+				}
+				fmt.Printf("Retrying in 5 s after find error: %s\n", err.Error())
+				time.Sleep(errorRetryDelay)
+			} else {
+				return nil, err
+			}
+		} else {
+			break
+		}
 	}
 	if len(result.Files) == 0 {
 		return nil, nil
 	}
 	return result.Files[0], nil
+}
+
+func escapeName(name string) string {
+	return strings.Replace(name, "'", "\\'", -1)
 }

@@ -3,6 +3,7 @@ package drive
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"google.golang.org/api/drive/v3"
 )
@@ -31,15 +32,28 @@ func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
 		Description: args.Description,
 		MimeType:    DirectoryMimeType,
 	}
-
-	// Set parent folders
 	dstFile.Parents = args.Parents
-
-	// Create directory
-	f, err := self.service.Files.Create(dstFile).SupportsTeamDrives(true).Do()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create directory: %s", err)
+	var f *drive.File
+	retries := 0
+	const maxRetries = 5
+	const errorRetryDelay = 5 * time.Second
+	for {
+		var err error
+		f, err = self.service.Files.Create(dstFile).SupportsTeamDrives(true).Do()
+		if err != nil {
+			if isBackendOrRateLimitError(err) {
+				retries++
+				if retries > maxRetries {
+					return nil, fmt.Errorf("Failed to create directory after %d error retries: %s", retries, err)
+				}
+				fmt.Fprintf(args.Out, "Retrying create directory in %d s after error: %s\n", errorRetryDelay, err.Error())
+				time.Sleep(errorRetryDelay)
+			} else {
+				return nil, fmt.Errorf("Failed to create directory: %s", err)
+			}
+		} else {
+			break
+		}
 	}
-
 	return f, nil
 }
