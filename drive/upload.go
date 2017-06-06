@@ -59,7 +59,14 @@ func (self *Drive) Upload(args UploadArgs) error {
 	}
 
 	if args.Recursive {
-		return self.uploadRecursive(args)
+		started := time.Now()
+		size, err := self.uploadRecursive(args)
+		if err != nil {
+			return err
+		}
+		rate := calcRate(size, started, time.Now())
+		fmt.Fprintf(args.Out, "Uploaded %s at %s/s\n", formatSize(size, false), formatSize(rate, false))
+		return nil
 	}
 
 	info, err := os.Stat(args.Path)
@@ -101,42 +108,45 @@ func (self *Drive) Upload(args UploadArgs) error {
 	return nil
 }
 
-func (self *Drive) uploadRecursive(args UploadArgs) error {
+func (self *Drive) uploadRecursive(args UploadArgs) (int64, error) {
+	var size int64
 	info, err := os.Stat(args.Path)
 	if err != nil {
-		return fmt.Errorf("Failed stat file: %s", err)
+		return 0, fmt.Errorf("Failed stat file: %s", err)
 	}
 	if info.IsDir() {
 		args.Name = ""
-		err = self.uploadDirectory(args)
+		size, err = self.uploadDirectory(args)
 		if err != nil {
-			return err
+			return 0, err
 		}
 	} else if info.Mode().IsRegular() {
 		f, rate, err := self.uploadFile(args)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		if rate == 0 {
 			fmt.Fprintf(args.Out, "Skipped %s (%s), already exists\n", args.Path, f.Id)
 		} else {
 			fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
 		}
+		size = f.Size
 	}
 	if args.Delete {
 		err = os.Remove(args.Path)
 		if err != nil {
-			return fmt.Errorf("Failed to remove: %s", err)
+			return 0, fmt.Errorf("Failed to remove: %s", err)
 		}
 		fmt.Fprintf(args.Out, "Removed %s\n", args.Path)
 	}
-	return nil
+	return size, nil
 }
 
-func (self *Drive) uploadDirectory(args UploadArgs) error {
+func (self *Drive) uploadDirectory(args UploadArgs) (int64, error) {
+	var totalSize int64
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	// Close file on function exit
 	defer srcFile.Close()
@@ -144,7 +154,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 	// check if directory exists
 	id, err := self.existingFolderId(args.Parents[0], srcFileInfo.Name())
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if id == "" {
 		fmt.Fprintf(args.Out, "Creating directory %s\n", srcFileInfo.Name())
@@ -156,7 +166,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 			Description: args.Description,
 		})
 		if err != nil {
-			return err
+			return 0, err
 		}
 		id = f.Id
 	} else {
@@ -166,7 +176,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 	// Read files from directory
 	names, err := srcFile.Readdirnames(0)
 	if err != nil && err != io.EOF {
-		return fmt.Errorf("Failed reading directory: %s", err)
+		return 0, fmt.Errorf("Failed reading directory: %s", err)
 	}
 
 	for _, name := range names {
@@ -177,13 +187,14 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 		newArgs.Description = ""
 
 		// Upload
-		err = self.uploadRecursive(newArgs)
+		size, err := self.uploadRecursive(newArgs)
 		if err != nil {
-			return err
+			return 0, err
 		}
+		totalSize += size
 	}
 
-	return nil
+	return totalSize, nil
 }
 
 func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
