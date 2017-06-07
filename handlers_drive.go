@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nanometrics/gdrive/auth"
-	"github.com/nanometrics/gdrive/cli"
-	"github.com/nanometrics/gdrive/drive"
+	"github.com/nanometrics/godrive/auth"
+	"github.com/nanometrics/godrive/cli"
+	"github.com/nanometrics/godrive/drive"
 )
 
 const ClientId = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
@@ -380,8 +380,8 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
 
 func getConfigDir(args cli.Arguments) string {
 	// Use dir from environment var if present
-	if os.Getenv("GDRIVE_CONFIG_DIR") != "" {
-		return os.Getenv("GDRIVE_CONFIG_DIR")
+	if os.Getenv("GODRIVE_CONFIG_DIR") != "" {
+		return os.Getenv("GODRIVE_CONFIG_DIR")
 	}
 	return args.String("configDir")
 }

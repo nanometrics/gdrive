@@ -1,9 +1,9 @@
-gdrive
+godrive
 ======
 
 
 ## Overview
-gdrive is a command line utility for interacting with Google Drive.
+godrive is a command line utility for interacting with Google Drive.
 
 ## Prerequisites
 None, binaries are statically linked.
@@ -13,40 +13,40 @@ Version 1.5 or higher.
 ## Installation
 ### With [Homebrew](http://brew.sh) on Mac
 ```
-brew install gdrive
+brew install godrive
 ```
 ### Other
-Download `gdrive` from one of the links below. On unix systems
-run `chmod +x gdrive` after download to make the binary executable.
-The first time gdrive is launched (i.e. run `gdrive about` in your
-terminal not just `gdrive`), you will be prompted for a verification code.
+Download `godrive` from one of the links below. On unix systems
+run `chmod +x godrive` after download to make the binary executable.
+The first time godrive is launched (i.e. run `godrive about` in your
+terminal not just `godrive`), you will be prompted for a verification code.
 The code is obtained by following the printed url and authenticating with the
 google account for the drive you want access to. This will create a token file
-inside the .gdrive folder in your home directory. Note that anyone with access
+inside the .godrive folder in your home directory. Note that anyone with access
 to this file will also have access to your google drive.
 If you want to manage multiple drives you can use the global `--config` flag
-or set the environment variable `GDRIVE_CONFIG_DIR`.
-Example: `GDRIVE_CONFIG_DIR="/home/user/.gdrive-secondary" gdrive list`
+or set the environment variable `GODRIVE_CONFIG_DIR`.
+Example: `GODRIVE_CONFIG_DIR="/home/user/.godrive-secondary" godrive list`
 You will be prompted for a new verification code if the folder does not exist.
 
 ## Compile from source
 ```bash
-go get github.com/nanometrics/gdrive
+go get github.com/nanometrics/godrive
 ```
-The gdrive binary should now be available at `$GOPATH/bin/gdrive`
+The godrive binary should now be available at `$GOPATH/bin/godrive`
 
 
-## Gdrive 2
-Gdrive 2 is more or less a full rewrite and is not backwards compatible
-with gdrive 1 as all the command line arguments has changed slightly.
-Gdrive 2 uses version 3 of the google drive api and my google-api-go-client
+## Godrive 2
+Godrive 2 is more or less a full rewrite and is not backwards compatible
+with godrive 1 as all the command line arguments has changed slightly.
+Godrive 2 uses version 3 of the google drive api and my google-api-go-client
 fork is no longer needed.
 
 ### Syncing
-Gdrive 2 supports basic syncing. It only syncs one way at the time and works
+Godrive 2 supports basic syncing. It only syncs one way at the time and works
 more like rsync than e.g. dropbox. Files that are synced to google drive
 are tagged with an appProperty so that the files on drive can be traversed
-faster. This means that you can't upload files with `gdrive upload` into
+faster. This means that you can't upload files with `godrive upload` into
 a sync directory as the files would be missing the sync tag, and would be
 ignored by the sync commands.
 The current implementation is slow and uses a lot of memory if you are
@@ -62,51 +62,51 @@ authentication, you need to use the `--service-account <serviceAccountCredential
 global option, where `serviceAccountCredentials` is a file in JSON format obtained
 through the Google API Console, and its location is relative to the config dir.
 
-#### .gdriveignore
-Placing a .gdriveignore in the root of your sync directory can be used to
-skip certain files from being synced. .gdriveignore follows the same
-rules as [.gitignore](https://git-scm.com/docs/gitignore), except that gdrive only reads the .gdriveignore file in the root of the sync directory, not ones in any subdirectories.
+#### .godriveignore
+Placing a .godriveignore in the root of your sync directory can be used to
+skip certain files from being synced. .godriveignore follows the same
+rules as [.gitignore](https://git-scm.com/docs/gitignore), except that godrive only reads the .godriveignore file in the root of the sync directory, not ones in any subdirectories.
 
 
 ## Usage
 ```
-gdrive [global] list [options]                                 List files
-gdrive [global] download [options] <fileId>                    Download file or directory
-gdrive [global] download query [options] <query>               Download all files and directories matching query
-gdrive [global] upload [options] <path>                        Upload file or directory
-gdrive [global] upload - [options] <name>                      Upload file from stdin
-gdrive [global] update [options] <fileId> <path>               Update file, this creates a new revision of the file
-gdrive [global] info [options] <fileId>                        Show file info
-gdrive [global] mkdir [options] <name>                         Create directory
-gdrive [global] share [options] <fileId>                       Share file or directory
-gdrive [global] share list <fileId>                            List files permissions
-gdrive [global] share revoke <fileId> <permissionId>           Revoke permission
-gdrive [global] delete [options] <fileId>                      Delete file or directory
-gdrive [global] sync list [options]                            List all syncable directories on drive
-gdrive [global] sync content [options] <fileId>                List content of syncable directory
-gdrive [global] sync download [options] <fileId> <path>        Sync drive directory to local directory
-gdrive [global] sync upload [options] <path> <fileId>          Sync local directory to drive
-gdrive [global] changes [options]                              List file changes
-gdrive [global] revision list [options] <fileId>               List file revisions
-gdrive [global] revision download [options] <fileId> <revId>   Download revision
-gdrive [global] revision delete <fileId> <revId>               Delete file revision
-gdrive [global] import [options] <path>                        Upload and convert file to a google document, see 'about import' for available conversions
-gdrive [global] export [options] <fileId>                      Export a google document
-gdrive [global] about [options]                                Google drive metadata, quota usage
-gdrive [global] about import                                   Show supported import formats
-gdrive [global] about export                                   Show supported export formats
-gdrive version                                                 Print application version
-gdrive help                                                    Print help
-gdrive help <command>                                          Print command help
-gdrive help <command> <subcommand>                             Print subcommand help
+godrive [global] list [options]                                 List files
+godrive [global] download [options] <fileId>                    Download file or directory
+godrive [global] download query [options] <query>               Download all files and directories matching query
+godrive [global] upload [options] <path>                        Upload file or directory
+godrive [global] upload - [options] <name>                      Upload file from stdin
+godrive [global] update [options] <fileId> <path>               Update file, this creates a new revision of the file
+godrive [global] info [options] <fileId>                        Show file info
+godrive [global] mkdir [options] <name>                         Create directory
+godrive [global] share [options] <fileId>                       Share file or directory
+godrive [global] share list <fileId>                            List files permissions
+godrive [global] share revoke <fileId> <permissionId>           Revoke permission
+godrive [global] delete [options] <fileId>                      Delete file or directory
+godrive [global] sync list [options]                            List all syncable directories on drive
+godrive [global] sync content [options] <fileId>                List content of syncable directory
+godrive [global] sync download [options] <fileId> <path>        Sync drive directory to local directory
+godrive [global] sync upload [options] <path> <fileId>          Sync local directory to drive
+godrive [global] changes [options]                              List file changes
+godrive [global] revision list [options] <fileId>               List file revisions
+godrive [global] revision download [options] <fileId> <revId>   Download revision
+godrive [global] revision delete <fileId> <revId>               Delete file revision
+godrive [global] import [options] <path>                        Upload and convert file to a google document, see 'about import' for available conversions
+godrive [global] export [options] <fileId>                      Export a google document
+godrive [global] about [options]                                Google drive metadata, quota usage
+godrive [global] about import                                   Show supported import formats
+godrive [global] about export                                   Show supported export formats
+godrive version                                                 Print application version
+godrive help                                                    Print help
+godrive help <command>                                          Print command help
+godrive help <command> <subcommand>                             Print subcommand help
 ```
 
 #### List files
 ```
-gdrive [global] list [options]
+godrive [global] list [options]
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -125,15 +125,15 @@ List file in subdirectory
 
 
 ```
-./gdrive list --query " 'IdOfTheParentFolder' in parents"
+./godrive list --query " 'IdOfTheParentFolder' in parents"
 ```
 
 #### Download file or directory
 ```
-gdrive [global] download [options] <fileId>
+godrive [global] download [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -150,10 +150,10 @@ options:
 
 #### Download all files and directories matching query
 ```
-gdrive [global] download query [options] <query>
+godrive [global] download query [options] <query>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -167,10 +167,10 @@ options:
 
 #### Upload file or directory
 ```
-gdrive [global] upload [options] <path>
+godrive [global] upload [options] <path>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -190,10 +190,10 @@ options:
 
 #### Upload file from stdin
 ```
-gdrive [global] upload - [options] <name>
+godrive [global] upload - [options] <name>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -210,10 +210,10 @@ options:
 
 #### Update file, this creates a new revision of the file
 ```
-gdrive [global] update [options] <fileId> <path>
+godrive [global] update [options] <fileId> <path>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -230,10 +230,10 @@ options:
 
 #### Show file info
 ```
-gdrive [global] info [options] <fileId>
+godrive [global] info [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -244,10 +244,10 @@ options:
 
 #### Create directory
 ```
-gdrive [global] mkdir [options] <name>
+godrive [global] mkdir [options] <name>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -259,10 +259,10 @@ options:
 
 #### Share file or directory
 ```
-gdrive [global] share [options] <fileId>
+godrive [global] share [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -277,10 +277,10 @@ options:
 
 #### List files permissions
 ```
-gdrive [global] share list <fileId>
+godrive [global] share list <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -288,10 +288,10 @@ global:
 
 #### Revoke permission
 ```
-gdrive [global] share revoke <fileId> <permissionId>
+godrive [global] share revoke <fileId> <permissionId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -299,10 +299,10 @@ global:
 
 #### Delete file or directory
 ```
-gdrive [global] delete [options] <fileId>
+godrive [global] delete [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -313,10 +313,10 @@ options:
 
 #### List all syncable directories on drive
 ```
-gdrive [global] sync list [options]
+godrive [global] sync list [options]
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -327,10 +327,10 @@ options:
 
 #### List content of syncable directory
 ```
-gdrive [global] sync content [options] <fileId>
+godrive [global] sync content [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -344,10 +344,10 @@ options:
 
 #### Sync drive directory to local directory
 ```
-gdrive [global] sync download [options] <fileId> <path>
+godrive [global] sync download [options] <fileId> <path>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -364,10 +364,10 @@ options:
 
 #### Sync local directory to drive
 ```
-gdrive [global] sync upload [options] <path> <fileId>
+godrive [global] sync upload [options] <path> <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -385,10 +385,10 @@ options:
 
 #### List file changes
 ```
-gdrive [global] changes [options]
+godrive [global] changes [options]
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -403,10 +403,10 @@ options:
 
 #### List file revisions
 ```
-gdrive [global] revision list [options] <fileId>
+godrive [global] revision list [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -419,10 +419,10 @@ options:
 
 #### Download revision
 ```
-gdrive [global] revision download [options] <fileId> <revId>
+godrive [global] revision download [options] <fileId> <revId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -437,10 +437,10 @@ options:
 
 #### Delete file revision
 ```
-gdrive [global] revision delete <fileId> <revId>
+godrive [global] revision delete <fileId> <revId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -448,10 +448,10 @@ global:
 
 #### Upload and convert file to a google document, see 'about import' for available conversions
 ```
-gdrive [global] import [options] <path>
+godrive [global] import [options] <path>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -463,10 +463,10 @@ options:
 
 #### Export a google document
 ```
-gdrive [global] export [options] <fileId>
+godrive [global] export [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -479,10 +479,10 @@ options:
 
 #### Google drive metadata, quota usage
 ```
-gdrive [global] about [options]
+godrive [global] about [options]
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -493,10 +493,10 @@ options:
 
 #### Show supported import formats
 ```
-gdrive [global] about import
+godrive [global] about import
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -504,10 +504,10 @@ global:
 
 #### Show supported export formats
 ```
-gdrive [global] about export
+godrive [global] about export
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.godrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
@@ -517,7 +517,7 @@ global:
 ## Examples
 #### List files
 ```
-$ gdrive list
+$ godrive list
 Id                             Name                    Type   Size     Created
 0B3X9GlR6EmbnZ3gyeGw4d3ozbUk   drive-windows-x64.exe   bin    6.6 MB   2015-07-18 16:43:58
 0B3X9GlR6EmbnTXlSc1FqV1dvSTQ   drive-windows-386.exe   bin    5.2 MB   2015-07-18 16:43:53
@@ -528,65 +528,65 @@ Id                             Name                    Type   Size     Created
 
 #### List largest files
 ```
-$ gdrive list --query "name contains 'gdrive'" --order "quotaBytesUsed desc" -m 3
+$ godrive list --query "name contains 'godrive'" --order "quotaBytesUsed desc" -m 3
 Id                             Name                     Type   Size     Created
-0B3X9GlR6EmbnZXpDRG1xblM2LTg   gdrive-linux-mips64      bin    8.5 MB   2016-02-22 21:07:04
-0B3X9GlR6EmbnNW5CTV8xdFkxTjg   gdrive-linux-mips64le    bin    8.5 MB   2016-02-22 21:07:07
-0B3X9GlR6EmbnZ1NGS25FdEVlWEk   gdrive-osx-x64           bin    8.3 MB   2016-02-21 20:22:13
+0B3X9GlR6EmbnZXpDRG1xblM2LTg   godrive-linux-mips64      bin    8.5 MB   2016-02-22 21:07:04
+0B3X9GlR6EmbnNW5CTV8xdFkxTjg   godrive-linux-mips64le    bin    8.5 MB   2016-02-22 21:07:07
+0B3X9GlR6EmbnZ1NGS25FdEVlWEk   godrive-osx-x64           bin    8.3 MB   2016-02-21 20:22:13
 ```
 
 #### Upload file
 ```
-$ gdrive upload gdrive-osx-x64
-Uploading gdrive-osx-x64
+$ godrive upload godrive-osx-x64
+Uploading godrive-osx-x64
 Uploaded 0B3X9GlR6EmbnZ1NGS25FdEVlWEk at 3.8 MB/s, total 8.3 MB
 ```
 
 #### Make directory
 ```
-$ gdrive mkdir gdrive-bin
+$ godrive mkdir godrive-bin
 Directory 0B3X9GlR6EmbnY1RLVTk5VUtOVkk created
 ```
 
 #### Upload file to directory
 ```
-$ gdrive upload --parent 0B3X9GlR6EmbnY1RLVTk5VUtOVkk gdrive-osx-x64
-Uploading gdrive-osx-x64
+$ godrive upload --parent 0B3X9GlR6EmbnY1RLVTk5VUtOVkk godrive-osx-x64
+Uploading godrive-osx-x64
 Uploaded 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E at 2.5 MB/s, total 8.3 MB
 ```
 
 #### Download file
 ```
-$ gdrive download 0B3X9GlR6EmbnZ1NGS25FdEVlWEk
-Downloading gdrive-osx-x64 -> gdrive-osx-x64
+$ godrive download 0B3X9GlR6EmbnZ1NGS25FdEVlWEk
+Downloading godrive-osx-x64 -> godrive-osx-x64
 Downloaded 0B3X9GlR6EmbnZ1NGS25FdEVlWEk at 8.3 MB/s, total 8.3 MB
 ```
 
 #### Share a file
 ```
-$ gdrive share 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E
+$ godrive share 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E
 Granted reader permission to anyone
 ```
 
 #### Pipe content directly to google drive
 ```
-$ echo "Hello World" | gdrive upload - hello.txt
+$ echo "Hello World" | godrive upload - hello.txt
 Uploading hello.txt
 Uploaded 0B3X9GlR6EmbnaXVrOUpIcWlUS0E at 8.0 B/s, total 12.0 B
 ```
 
 #### Print file to stdout
 ```
-$ gdrive download --stdout 0B3X9GlR6EmbnaXVrOUpIcWlUS0E
+$ godrive download --stdout 0B3X9GlR6EmbnaXVrOUpIcWlUS0E
 Hello World
 ```
 
 #### Get file info
 ```
-$ gdrive info 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E
+$ godrive info 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E
 Id: 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E
-Name: gdrive-osx-x64
-Path: gdrive-bin/gdrive-osx-x64
+Name: godrive-osx-x64
+Path: godrive-bin/godrive-osx-x64
 Mime: application/octet-stream
 Size: 8.3 MB
 Created: 2016-02-21 20:47:04
@@ -600,46 +600,46 @@ DownloadUrl: https://docs.google.com/uc?id=0B3X9GlR6EmbnNTk0SkV0bm5Hd0E&export=d
 
 #### Update file (create new revision)
 ```
-$ gdrive update 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E gdrive-osx-x64
-Uploading gdrive-osx-x64
+$ godrive update 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E godrive-osx-x64
+Uploading godrive-osx-x64
 Updated 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E at 2.0 MB/s, total 8.3 MB
 ```
 
 #### List file revisions
 ```
-$ gdrive revision list 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E
+$ godrive revision list 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E
 Id                                                    Name             Size     Modified              KeepForever
-0B3X9GlR6EmbnOFlHSTZQNWJWMGN2ckZucC9VaEUwczV1cUNrPQ   gdrive-osx-x64   8.3 MB   2016-02-21 20:47:04   False
-0B3X9GlR6EmbndVEwMlZCUldGWUlPb2lTS25rOFo1L2t6c2ZVPQ   gdrive-osx-x64   8.3 MB   2016-02-21 21:12:09   False
+0B3X9GlR6EmbnOFlHSTZQNWJWMGN2ckZucC9VaEUwczV1cUNrPQ   godrive-osx-x64   8.3 MB   2016-02-21 20:47:04   False
+0B3X9GlR6EmbndVEwMlZCUldGWUlPb2lTS25rOFo1L2t6c2ZVPQ   godrive-osx-x64   8.3 MB   2016-02-21 21:12:09   False
 ```
 
 #### Download revision
 ```
-$ gdrive revision download 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E 0B3X9GlR6EmbnOFlHSTZQNWJWMGN2ckZucC9VaEUwczV1cUNrPQ
-Downloading gdrive-osx-x64 -> gdrive-osx-x64
+$ godrive revision download 0B3X9GlR6EmbnNTk0SkV0bm5Hd0E 0B3X9GlR6EmbnOFlHSTZQNWJWMGN2ckZucC9VaEUwczV1cUNrPQ
+Downloading godrive-osx-x64 -> godrive-osx-x64
 Download complete, rate: 8.3 MB/s, total size: 8.3 MB
 ```
 
 #### Export google doc as docx
 ```
-$ gdrive export --mime application/vnd.openxmlformats-officedocument.wordprocessingml.document 1Kt5A8X7X2RQrEi5t6Y9W1LayRc4hyrFiG63y2dIJEvk
+$ godrive export --mime application/vnd.openxmlformats-officedocument.wordprocessingml.document 1Kt5A8X7X2RQrEi5t6Y9W1LayRc4hyrFiG63y2dIJEvk
 Exported 'foo.docx' with mime type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ```
 
 #### Import csv as google spreadsheet
 ```
-$ gdrive import foo.csv
+$ godrive import foo.csv
 Imported 1mTl3DjIvap4tpTX_oMkDcbDT8ShtiGJRlozTfkXpeko with mime type: 'application/vnd.google-apps.spreadsheet'
 ```
 
 #### Syncing directory to drive
 ```
 # Create directory on drive
-$ gdrive mkdir drive-bin
+$ godrive mkdir drive-bin
 Directory 0B3X9GlR6EmbnOEd6cEh6bU9XZWM created
 
 # Sync to drive
-$ gdrive sync upload _release/bin 0B3X9GlR6EmbnOEd6cEh6bU9XZWM
+$ godrive sync upload _release/bin 0B3X9GlR6EmbnOEd6cEh6bU9XZWM
 Starting sync...
 Collecting local and remote file information...
 Found 32 local files and 0 remote files
@@ -653,39 +653,39 @@ Found 32 local files and 0 remote files
 [0006/0006] Creating directory drive-bin/windows
 
 26 remote files are missing
-[0001/0026] Uploading bsd/gdrive-dragonfly-x64 -> drive-bin/bsd/gdrive-dragonfly-x64
-[0002/0026] Uploading bsd/gdrive-freebsd-386 -> drive-bin/bsd/gdrive-freebsd-386
-[0003/0026] Uploading bsd/gdrive-freebsd-arm -> drive-bin/bsd/gdrive-freebsd-arm
-[0004/0026] Uploading bsd/gdrive-freebsd-x64 -> drive-bin/bsd/gdrive-freebsd-x64
-[0005/0026] Uploading bsd/gdrive-netbsd-386 -> drive-bin/bsd/gdrive-netbsd-386
-[0006/0026] Uploading bsd/gdrive-netbsd-arm -> drive-bin/bsd/gdrive-netbsd-arm
-[0007/0026] Uploading bsd/gdrive-netbsd-x64 -> drive-bin/bsd/gdrive-netbsd-x64
-[0008/0026] Uploading bsd/gdrive-openbsd-386 -> drive-bin/bsd/gdrive-openbsd-386
-[0009/0026] Uploading bsd/gdrive-openbsd-arm -> drive-bin/bsd/gdrive-openbsd-arm
-[0010/0026] Uploading bsd/gdrive-openbsd-x64 -> drive-bin/bsd/gdrive-openbsd-x64
-[0011/0026] Uploading linux/gdrive-linux-386 -> drive-bin/linux/gdrive-linux-386
-[0012/0026] Uploading linux/gdrive-linux-arm -> drive-bin/linux/gdrive-linux-arm
-[0013/0026] Uploading linux/gdrive-linux-arm64 -> drive-bin/linux/gdrive-linux-arm64
-[0014/0026] Uploading linux/gdrive-linux-mips64 -> drive-bin/linux/gdrive-linux-mips64
-[0015/0026] Uploading linux/gdrive-linux-mips64le -> drive-bin/linux/gdrive-linux-mips64le
-[0016/0026] Uploading linux/gdrive-linux-ppc64 -> drive-bin/linux/gdrive-linux-ppc64
-[0017/0026] Uploading linux/gdrive-linux-ppc64le -> drive-bin/linux/gdrive-linux-ppc64le
-[0018/0026] Uploading linux/gdrive-linux-x64 -> drive-bin/linux/gdrive-linux-x64
-[0019/0026] Uploading osx/gdrive-osx-386 -> drive-bin/osx/gdrive-osx-386
-[0020/0026] Uploading osx/gdrive-osx-arm -> drive-bin/osx/gdrive-osx-arm
-[0021/0026] Uploading osx/gdrive-osx-x64 -> drive-bin/osx/gdrive-osx-x64
-[0022/0026] Uploading plan9/gdrive-plan9-386 -> drive-bin/plan9/gdrive-plan9-386
-[0023/0026] Uploading plan9/gdrive-plan9-x64 -> drive-bin/plan9/gdrive-plan9-x64
-[0024/0026] Uploading solaris/gdrive-solaris-x64 -> drive-bin/solaris/gdrive-solaris-x64
-[0025/0026] Uploading windows/gdrive-windows-386.exe -> drive-bin/windows/gdrive-windows-386.exe
-[0026/0026] Uploading windows/gdrive-windows-x64.exe -> drive-bin/windows/gdrive-windows-x64.exe
+[0001/0026] Uploading bsd/godrive-dragonfly-x64 -> drive-bin/bsd/godrive-dragonfly-x64
+[0002/0026] Uploading bsd/godrive-freebsd-386 -> drive-bin/bsd/godrive-freebsd-386
+[0003/0026] Uploading bsd/godrive-freebsd-arm -> drive-bin/bsd/godrive-freebsd-arm
+[0004/0026] Uploading bsd/godrive-freebsd-x64 -> drive-bin/bsd/godrive-freebsd-x64
+[0005/0026] Uploading bsd/godrive-netbsd-386 -> drive-bin/bsd/godrive-netbsd-386
+[0006/0026] Uploading bsd/godrive-netbsd-arm -> drive-bin/bsd/godrive-netbsd-arm
+[0007/0026] Uploading bsd/godrive-netbsd-x64 -> drive-bin/bsd/godrive-netbsd-x64
+[0008/0026] Uploading bsd/godrive-openbsd-386 -> drive-bin/bsd/godrive-openbsd-386
+[0009/0026] Uploading bsd/godrive-openbsd-arm -> drive-bin/bsd/godrive-openbsd-arm
+[0010/0026] Uploading bsd/godrive-openbsd-x64 -> drive-bin/bsd/godrive-openbsd-x64
+[0011/0026] Uploading linux/godrive-linux-386 -> drive-bin/linux/godrive-linux-386
+[0012/0026] Uploading linux/godrive-linux-arm -> drive-bin/linux/godrive-linux-arm
+[0013/0026] Uploading linux/godrive-linux-arm64 -> drive-bin/linux/godrive-linux-arm64
+[0014/0026] Uploading linux/godrive-linux-mips64 -> drive-bin/linux/godrive-linux-mips64
+[0015/0026] Uploading linux/godrive-linux-mips64le -> drive-bin/linux/godrive-linux-mips64le
+[0016/0026] Uploading linux/godrive-linux-ppc64 -> drive-bin/linux/godrive-linux-ppc64
+[0017/0026] Uploading linux/godrive-linux-ppc64le -> drive-bin/linux/godrive-linux-ppc64le
+[0018/0026] Uploading linux/godrive-linux-x64 -> drive-bin/linux/godrive-linux-x64
+[0019/0026] Uploading osx/godrive-osx-386 -> drive-bin/osx/godrive-osx-386
+[0020/0026] Uploading osx/godrive-osx-arm -> drive-bin/osx/godrive-osx-arm
+[0021/0026] Uploading osx/godrive-osx-x64 -> drive-bin/osx/godrive-osx-x64
+[0022/0026] Uploading plan9/godrive-plan9-386 -> drive-bin/plan9/godrive-plan9-386
+[0023/0026] Uploading plan9/godrive-plan9-x64 -> drive-bin/plan9/godrive-plan9-x64
+[0024/0026] Uploading solaris/godrive-solaris-x64 -> drive-bin/solaris/godrive-solaris-x64
+[0025/0026] Uploading windows/godrive-windows-386.exe -> drive-bin/windows/godrive-windows-386.exe
+[0026/0026] Uploading windows/godrive-windows-x64.exe -> drive-bin/windows/godrive-windows-x64.exe
 Sync finished in 1m18.891946279s
 
 # Add new local file
 $ echo "google drive binaries" > _release/bin/readme.txt
 
 # Sync again
-$ gdrive sync upload _release/bin 0B3X9GlR6EmbnOEd6cEh6bU9XZWM
+$ godrive sync upload _release/bin 0B3X9GlR6EmbnOEd6cEh6bU9XZWM
 Starting sync...
 Collecting local and remote file information...
 Found 33 local files and 32 remote files
@@ -698,7 +698,7 @@ Sync finished in 2.201339535s
 $ echo "for all platforms" >> _release/bin/readme.txt
 
 # Sync again
-$ gdrive sync upload _release/bin 0B3X9GlR6EmbnOEd6cEh6bU9XZWM
+$ godrive sync upload _release/bin 0B3X9GlR6EmbnOEd6cEh6bU9XZWM
 Starting sync...
 Collecting local and remote file information...
 Found 33 local files and 33 remote files
@@ -710,39 +710,39 @@ Sync finished in 1.890244258s
 
 #### List content of sync directory
 ```
-$ gdrive sync content 0B3X9GlR6EmbnOEd6cEh6bU9XZWM
+$ godrive sync content 0B3X9GlR6EmbnOEd6cEh6bU9XZWM
 Id                             Path                             Type   Size     Modified
 0B3X9GlR6EmbnMldxMFV1UGVMTlE   bsd                              dir             2016-02-21 22:54:00
-0B3X9GlR6EmbnM05sQ3hVUnJnOXc   bsd/gdrive-dragonfly-x64         bin    7.8 MB   2016-02-21 22:54:14
-0B3X9GlR6EmbnVy1KXzA4dlU5RVE   bsd/gdrive-freebsd-386           bin    6.1 MB   2016-02-21 22:54:18
-0B3X9GlR6Embnb29QQkFtSlRiZnc   bsd/gdrive-freebsd-arm           bin    6.1 MB   2016-02-21 22:54:20
-0B3X9GlR6EmbnMkFQYVpSaHhHTXM   bsd/gdrive-freebsd-x64           bin    7.8 MB   2016-02-21 22:54:23
-0B3X9GlR6EmbnVmJRMl9hUDloVU0   bsd/gdrive-netbsd-386            bin    6.1 MB   2016-02-21 22:54:25
-0B3X9GlR6EmbnLVlTZWpxOEF4Q2s   bsd/gdrive-netbsd-arm            bin    6.1 MB   2016-02-21 22:54:28
-0B3X9GlR6EmbnOENUZmh3anJmNG8   bsd/gdrive-netbsd-x64            bin    7.8 MB   2016-02-21 22:54:30
-0B3X9GlR6EmbnWTRoQ2ZVQXRfQlU   bsd/gdrive-openbsd-386           bin    6.1 MB   2016-02-21 22:54:32
-0B3X9GlR6EmbncEtlN3ZuQ0VUWms   bsd/gdrive-openbsd-arm           bin    6.1 MB   2016-02-21 22:54:35
-0B3X9GlR6EmbnMlFLY1ptNEFyZWc   bsd/gdrive-openbsd-x64           bin    7.8 MB   2016-02-21 22:54:38
+0B3X9GlR6EmbnM05sQ3hVUnJnOXc   bsd/godrive-dragonfly-x64         bin    7.8 MB   2016-02-21 22:54:14
+0B3X9GlR6EmbnVy1KXzA4dlU5RVE   bsd/godrive-freebsd-386           bin    6.1 MB   2016-02-21 22:54:18
+0B3X9GlR6Embnb29QQkFtSlRiZnc   bsd/godrive-freebsd-arm           bin    6.1 MB   2016-02-21 22:54:20
+0B3X9GlR6EmbnMkFQYVpSaHhHTXM   bsd/godrive-freebsd-x64           bin    7.8 MB   2016-02-21 22:54:23
+0B3X9GlR6EmbnVmJRMl9hUDloVU0   bsd/godrive-netbsd-386            bin    6.1 MB   2016-02-21 22:54:25
+0B3X9GlR6EmbnLVlTZWpxOEF4Q2s   bsd/godrive-netbsd-arm            bin    6.1 MB   2016-02-21 22:54:28
+0B3X9GlR6EmbnOENUZmh3anJmNG8   bsd/godrive-netbsd-x64            bin    7.8 MB   2016-02-21 22:54:30
+0B3X9GlR6EmbnWTRoQ2ZVQXRfQlU   bsd/godrive-openbsd-386           bin    6.1 MB   2016-02-21 22:54:32
+0B3X9GlR6EmbncEtlN3ZuQ0VUWms   bsd/godrive-openbsd-arm           bin    6.1 MB   2016-02-21 22:54:35
+0B3X9GlR6EmbnMlFLY1ptNEFyZWc   bsd/godrive-openbsd-x64           bin    7.8 MB   2016-02-21 22:54:38
 0B3X9GlR6EmbncGtSajQyNzloVEE   linux                            dir             2016-02-21 22:54:01
-0B3X9GlR6EmbnMWVudkJmb1NZdmM   linux/gdrive-linux-386           bin    6.1 MB   2016-02-21 22:54:40
-0B3X9GlR6Embnbnpla1R2VHV5T2M   linux/gdrive-linux-arm           bin    6.1 MB   2016-02-21 22:54:42
-0B3X9GlR6EmbnM0s2cU1YWkNJSjA   linux/gdrive-linux-arm64         bin    7.7 MB   2016-02-21 22:54:45
-0B3X9GlR6EmbnNU9NNi1TdDc4S2c   linux/gdrive-linux-mips64        bin    8.5 MB   2016-02-21 22:54:47
-0B3X9GlR6EmbnSmdQNjRKZ2dWV1U   linux/gdrive-linux-mips64le      bin    8.5 MB   2016-02-21 22:54:50
-0B3X9GlR6EmbnS0g0OVgxMHY5Z3c   linux/gdrive-linux-ppc64         bin    7.8 MB   2016-02-21 22:54:52
-0B3X9GlR6EmbneVp6ZXRpR3FhWlU   linux/gdrive-linux-ppc64le       bin    7.8 MB   2016-02-21 22:54:54
-0B3X9GlR6EmbnczdJT195dFVxdU0   linux/gdrive-linux-x64           bin    7.8 MB   2016-02-21 22:54:57
+0B3X9GlR6EmbnMWVudkJmb1NZdmM   linux/godrive-linux-386           bin    6.1 MB   2016-02-21 22:54:40
+0B3X9GlR6Embnbnpla1R2VHV5T2M   linux/godrive-linux-arm           bin    6.1 MB   2016-02-21 22:54:42
+0B3X9GlR6EmbnM0s2cU1YWkNJSjA   linux/godrive-linux-arm64         bin    7.7 MB   2016-02-21 22:54:45
+0B3X9GlR6EmbnNU9NNi1TdDc4S2c   linux/godrive-linux-mips64        bin    8.5 MB   2016-02-21 22:54:47
+0B3X9GlR6EmbnSmdQNjRKZ2dWV1U   linux/godrive-linux-mips64le      bin    8.5 MB   2016-02-21 22:54:50
+0B3X9GlR6EmbnS0g0OVgxMHY5Z3c   linux/godrive-linux-ppc64         bin    7.8 MB   2016-02-21 22:54:52
+0B3X9GlR6EmbneVp6ZXRpR3FhWlU   linux/godrive-linux-ppc64le       bin    7.8 MB   2016-02-21 22:54:54
+0B3X9GlR6EmbnczdJT195dFVxdU0   linux/godrive-linux-x64           bin    7.8 MB   2016-02-21 22:54:57
 0B3X9GlR6EmbnTXZXeDRnSDdVS1E   osx                              dir             2016-02-21 22:54:02
-0B3X9GlR6EmbnWnRheXJNR0pUMU0   osx/gdrive-osx-386               bin    6.6 MB   2016-02-21 22:54:59
-0B3X9GlR6EmbnRzNqMWFXdDR1Rms   osx/gdrive-osx-arm               bin    6.6 MB   2016-02-21 22:55:01
-0B3X9GlR6EmbnaDlVWTZDd0JIeEU   osx/gdrive-osx-x64               bin    8.3 MB   2016-02-21 22:55:04
+0B3X9GlR6EmbnWnRheXJNR0pUMU0   osx/godrive-osx-386               bin    6.6 MB   2016-02-21 22:54:59
+0B3X9GlR6EmbnRzNqMWFXdDR1Rms   osx/godrive-osx-arm               bin    6.6 MB   2016-02-21 22:55:01
+0B3X9GlR6EmbnaDlVWTZDd0JIeEU   osx/godrive-osx-x64               bin    8.3 MB   2016-02-21 22:55:04
 0B3X9GlR6EmbnWW84UFBvbHlURXM   plan9                            dir             2016-02-21 22:54:02
-0B3X9GlR6EmbnTmc0a2RNdDZDRUU   plan9/gdrive-plan9-386           bin    5.8 MB   2016-02-21 22:55:07
-0B3X9GlR6EmbnT1pYZ2p4Sk9FVFk   plan9/gdrive-plan9-x64           bin    7.4 MB   2016-02-21 22:55:10
+0B3X9GlR6EmbnTmc0a2RNdDZDRUU   plan9/godrive-plan9-386           bin    5.8 MB   2016-02-21 22:55:07
+0B3X9GlR6EmbnT1pYZ2p4Sk9FVFk   plan9/godrive-plan9-x64           bin    7.4 MB   2016-02-21 22:55:10
 0B3X9GlR6EmbnbnZnXzlYVHoxdk0   readme.txt                       bin    40.0 B   2016-02-21 22:59:56
 0B3X9GlR6EmbnSWF1QUlta3RnaGc   solaris                          dir             2016-02-21 22:54:03
-0B3X9GlR6EmbnaWFOV0YxSGs5Znc   solaris/gdrive-solaris-x64       bin    7.7 MB   2016-02-21 22:55:13
+0B3X9GlR6EmbnaWFOV0YxSGs5Znc   solaris/godrive-solaris-x64       bin    7.7 MB   2016-02-21 22:55:13
 0B3X9GlR6EmbnNE5ySkEzbWQ4Qms   windows                          dir             2016-02-21 22:54:03
-0B3X9GlR6EmbnX1RIT2w1TWZYWFU   windows/gdrive-windows-386.exe   bin    6.1 MB   2016-02-21 22:55:15
-0B3X9GlR6EmbndmVMU05POGRPS3c   windows/gdrive-windows-x64.exe   bin    7.8 MB   2016-02-21 22:55:18
+0B3X9GlR6EmbnX1RIT2w1TWZYWFU   windows/godrive-windows-386.exe   bin    6.1 MB   2016-02-21 22:55:15
+0B3X9GlR6EmbndmVMU05POGRPS3c   windows/godrive-windows-x64.exe   bin    7.8 MB   2016-02-21 22:55:18
 ```

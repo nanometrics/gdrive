@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/nanometrics/gdrive/drive"
+	"github.com/nanometrics/godrive/drive"
 )
 
 const MinCacheFileSize = 5 * 1024 * 1024

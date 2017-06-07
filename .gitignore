@@ -6,5 +6,5 @@ _release/bin
 *.un~
 Session.vim
 .netrwhist
-gdrive
-gdrive.sh
+godrive
+godrive.sh

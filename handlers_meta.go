@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/nanometrics/gdrive/cli"
+	"github.com/nanometrics/godrive/cli"
 )
 
 func printVersion(ctx cli.Context) {

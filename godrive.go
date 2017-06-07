@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nanometrics/gdrive/cli"
+	"github.com/nanometrics/godrive/cli"
 )
 
-const Name = "gdrive"
-const Version = "2.2.0nmx"
+const Name = "godrive"
+const Version = "1.0.0"
 
 const DefaultMaxFiles = 30
 const DefaultMaxChanges = 100

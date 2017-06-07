@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const DefaultIgnoreFile = ".gdriveignore"
+const DefaultIgnoreFile = ".godriveignore"
 
 type ModTime int
 

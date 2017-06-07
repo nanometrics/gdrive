@@ -9,7 +9,7 @@ import (
 )
 
 func GetDefaultConfigDir() string {
-	return filepath.Join(Homedir(), ".gdrive")
+	return filepath.Join(Homedir(), ".godrive")
 }
 
 func ConfigFilePath(basePath, name string) string {

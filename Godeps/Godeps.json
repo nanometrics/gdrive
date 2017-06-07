@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/nanometrics/gdrive",
+	"ImportPath": "github.com/nanometrics/godrive",
 	"GoVersion": "go1.6",
 	"GodepVersion": "v79",
 	"Deps": [
