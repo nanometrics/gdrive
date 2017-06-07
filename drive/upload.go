@@ -3,6 +3,7 @@ package drive
 import (
 	"fmt"
 	"io"
+	"log"
 	"mime"
 	"os"
 	"path/filepath"
@@ -65,7 +66,7 @@ func (self *Drive) Upload(args UploadArgs) error {
 			return err
 		}
 		rate := calcRate(size, started, time.Now())
-		fmt.Fprintf(args.Out, "Uploaded %s at %s/s\n", formatSize(size, false), formatSize(rate, false))
+		log.Printf("Uploaded %s at %s/s\n", formatSize(size, false), formatSize(rate, false))
 		return nil
 	}
 
@@ -83,9 +84,9 @@ func (self *Drive) Upload(args UploadArgs) error {
 		return err
 	}
 	if rate == 0 {
-		fmt.Fprintf(args.Out, "Skipped %s, already exists\n", f.Id)
+		log.Printf("Skipped %s, already exists\n", f.Id)
 	} else {
-		fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
+		log.Printf("Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
 	}
 
 	if args.Share {
@@ -94,7 +95,7 @@ func (self *Drive) Upload(args UploadArgs) error {
 			return err
 		}
 
-		fmt.Fprintf(args.Out, "File is readable by anyone at %s\n", f.WebContentLink)
+		log.Printf("File is readable by anyone at %s\n", f.WebContentLink)
 	}
 
 	if args.Delete {
@@ -102,7 +103,7 @@ func (self *Drive) Upload(args UploadArgs) error {
 		if err != nil {
 			return fmt.Errorf("Failed to delete file: %s", err)
 		}
-		fmt.Fprintf(args.Out, "Removed %s\n", args.Path)
+		log.Printf("Removed %s\n", args.Path)
 	}
 
 	return nil
@@ -126,9 +127,9 @@ func (self *Drive) uploadRecursive(args UploadArgs) (int64, error) {
 			return 0, err
 		}
 		if rate == 0 {
-			fmt.Fprintf(args.Out, "Skipped %s (%s), already exists\n", args.Path, f.Id)
+			log.Printf("Skipped %s (%s), already exists\n", args.Path, f.Id)
 		} else {
-			fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
+			log.Printf("Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
 		}
 		size = f.Size
 	}
@@ -137,7 +138,7 @@ func (self *Drive) uploadRecursive(args UploadArgs) (int64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("Failed to remove: %s", err)
 		}
-		fmt.Fprintf(args.Out, "Removed %s\n", args.Path)
+		log.Printf("Removed %s\n", args.Path)
 	}
 	return size, nil
 }
@@ -157,8 +158,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) (int64, error) {
 		return 0, err
 	}
 	if id == "" {
-		fmt.Fprintf(args.Out, "Creating directory %s\n", srcFileInfo.Name())
-		// Make directory on drive
+		log.Printf("Creating directory %s\n", srcFileInfo.Name())
 		f, err := self.mkdir(MkdirArgs{
 			Out:         args.Out,
 			Name:        srcFileInfo.Name(),
@@ -170,23 +170,20 @@ func (self *Drive) uploadDirectory(args UploadArgs) (int64, error) {
 		}
 		id = f.Id
 	} else {
-		fmt.Fprintf(args.Out, "Using existing directory %s (%s)\n", srcFileInfo.Name(), id)
+		log.Printf("Using existing directory %s (%s)\n", srcFileInfo.Name(), id)
 	}
 
-	// Read files from directory
 	names, err := srcFile.Readdirnames(0)
 	if err != nil && err != io.EOF {
 		return 0, fmt.Errorf("Failed reading directory: %s", err)
 	}
 
 	for _, name := range names {
-		// Copy args and set new path and parents
 		newArgs := args
 		newArgs.Path = filepath.Join(args.Path, name)
 		newArgs.Parents = []string{id}
 		newArgs.Description = ""
 
-		// Upload
 		size, err := self.uploadRecursive(newArgs)
 		if err != nil {
 			return 0, err
@@ -206,28 +203,22 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-
-	// Close file on function exit
 	defer srcFile.Close()
 
-	// Instantiate empty drive file
 	dstFile := &drive.File{Description: args.Description}
 
-	// Use provided file name or use filename
 	if args.Name == "" {
 		dstFile.Name = filepath.Base(srcFileInfo.Name())
 	} else {
 		dstFile.Name = args.Name
 	}
 
-	// Set provided mime type or get type based on file extension
 	if args.Mime == "" {
 		dstFile.MimeType = mime.TypeByExtension(filepath.Ext(dstFile.Name))
 	} else {
 		dstFile.MimeType = args.Mime
 	}
 
-	// Set parent folders
 	dstFile.Parents = args.Parents
 
 	// if file exists with same name and checksum, skip upload
@@ -243,14 +234,12 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	}
 
 	chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
-	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
+	log.Printf("Uploading %s\n", args.Path)
 	started := time.Now()
 	var f *drive.File
 	retries := 0
 	for {
-		// Wrap file in progress reader
 		progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
-		// Wrap reader in timeout reader
 		reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 		f, err = self.service.Files.Create(dstFile).SupportsTeamDrives(true).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 		if err != nil {
@@ -259,14 +248,14 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 				if retries > maxRetries {
 					return nil, 0, fmt.Errorf("Failed to upload after %d timeout retries: %s", retries, err)
 				}
-				fmt.Fprintf(args.Out, "Retrying in 30 s after timeout: %s\n", err.Error())
+				log.Printf("Retrying in 30 s after timeout: %s\n", err.Error())
 				time.Sleep(timeoutRetryDelay)
 			} else if isBackendOrRateLimitError(err) {
 				retries++
 				if retries > maxRetries {
 					return nil, 0, fmt.Errorf("Failed to upload after %d error retries: %s", retries, err)
 				}
-				fmt.Fprintf(args.Out, "Retrying in 5 s after error: %s\n", err.Error())
+				log.Printf("Retrying in 5 s after error: %s\n", err.Error())
 				time.Sleep(errorRetryDelay)
 			} else {
 				return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
@@ -281,7 +270,6 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 		return nil, 0, fmt.Errorf("Failed to verify uploaded file %s from %s, local checksum %s, remote checksum %s", f.Id, args.Path, localMd5, f.Md5Checksum)
 	}
 
-	// Calculate average upload rate
 	rate := calcRate(f.Size, started, time.Now())
 
 	return f, rate, nil
@@ -304,28 +292,16 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
 	}
-
-	// Instantiate empty drive file
 	dstFile := &drive.File{Name: args.Name, Description: args.Description}
-
-	// Set mime type if provided
 	if args.Mime != "" {
 		dstFile.MimeType = args.Mime
 	}
-
-	// Set parent folders
 	dstFile.Parents = args.Parents
-
-	// Chunk size option
 	chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
-
-	// Wrap file in progress reader
 	progressReader := getProgressReader(args.In, args.Progress, 0)
-
-	// Wrap reader in timeout reader
 	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 
-	fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
+	log.Printf("Uploading %s\n", dstFile.Name)
 	started := time.Now()
 
 	f, err := self.service.Files.Create(dstFile).SupportsTeamDrives(true).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
@@ -336,41 +312,35 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 		return fmt.Errorf("Failed to upload file: %s", err)
 	}
 
-	// Calculate average upload rate
 	rate := calcRate(f.Size, started, time.Now())
 
-	fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
+	log.Printf("Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
 	if args.Share {
 		err = self.shareAnyoneReader(f.Id)
 		if err != nil {
 			return err
 		}
-
-		fmt.Fprintf(args.Out, "File is readable by anyone at %s\n", f.WebContentLink)
+		log.Printf("File is readable by anyone at %s\n", f.WebContentLink)
 	}
 	return nil
 }
 
 func (self *Drive) parentFromFolder(folderPath string) (string, error) {
-	// fmt.Printf("Looking for folder path %s\n", folderPath)
 	parts := strings.Split(folderPath, "/")
 	parentId := ""
 	for _, name := range parts {
 		if name == "" {
 			continue
 		}
-		// fmt.Printf("Looking for %s\n", name)
 		if parentId == "" {
 			if strings.EqualFold("mydrive", strings.Replace(name, " ", "", -1)) {
 				parentId = "root"
 			} else {
-				// fmt.Printf("Looking for team drive %s\n", name)
 				result, err := self.service.Teamdrives.List().Fields("teamDrives(id,name)").Do()
 				if err != nil {
 					return "", err
 				}
 				for _, drive := range result.TeamDrives {
-					// fmt.Printf("Checking team drive %s\n", drive.Name)
 					if drive.Name == name {
 						parentId = drive.Id
 						break
@@ -380,10 +350,8 @@ func (self *Drive) parentFromFolder(folderPath string) (string, error) {
 			if parentId == "" {
 				return "", fmt.Errorf("No top level folder matched name %s", name)
 			}
-			// fmt.Printf("Found parent %s for %s\n", parentId, name)
 		} else {
 			query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and name = '%s' and '%s' in parents", escapeName(name), parentId)
-			// fmt.Printf("Query: %s\n", query)
 			result, err := self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(query).Fields("files(id,name)").Do()
 			if err != nil {
 				return "", err
@@ -392,10 +360,8 @@ func (self *Drive) parentFromFolder(folderPath string) (string, error) {
 				return "", fmt.Errorf("No folders matched name %s", name)
 			}
 			parentId = result.Files[0].Id
-			// fmt.Printf("Found parent %s for %s\n", parentId, name)
 		}
 	}
-	// fmt.Printf("Parent %s for %s\n", parentId, folderPath)
 	return parentId, nil
 }
 
@@ -428,7 +394,7 @@ func (self *Drive) fileQuery(query string) (*drive.File, error) {
 				if retries > maxRetries {
 					return nil, fmt.Errorf("Error finding file: %s", err.Error())
 				}
-				fmt.Printf("Retrying in 5 s after find error: %s\n", err.Error())
+				log.Printf("Retrying in 5 s after find error: %s\n", err.Error())
 				time.Sleep(errorRetryDelay)
 			} else {
 				return nil, err

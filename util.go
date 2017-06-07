@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -46,15 +46,12 @@ func equal(a, b []string) bool {
 }
 
 func ExitF(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, a...)
-	fmt.Println("")
-	os.Exit(1)
+	log.Fatalf(format, a...)
 }
 
 func checkErr(err error) {
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 }
 

@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"os"
+	"time"
 
 	"github.com/nanometrics/godrive/cli"
 )
@@ -23,6 +26,15 @@ const DefaultShareType = "anyone"
 var DefaultConfigDir = GetDefaultConfigDir()
 
 func main() {
+	fileName := Name + "_" + time.Now().Format("2006-01-02_15-04-05") + ".log"
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalln("Failed to open log file", fileName, ":", err)
+	}
+	multi := io.MultiWriter(file, os.Stderr)
+	log.SetOutput(multi)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+
 	globalFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:         "configDir",

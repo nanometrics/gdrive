@@ -3,6 +3,7 @@ package drive
 import (
 	"fmt"
 	"io"
+	"log"
 	"time"
 
 	"google.golang.org/api/drive/v3"
@@ -22,7 +23,7 @@ func (self *Drive) Mkdir(args MkdirArgs) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(args.Out, "Directory %s created\n", f.Id)
+	log.Printf("Directory %s created\n", f.Id)
 	return nil
 }
 
@@ -46,7 +47,7 @@ func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
 				if retries > maxRetries {
 					return nil, fmt.Errorf("Failed to create directory after %d error retries: %s", retries, err)
 				}
-				fmt.Fprintf(args.Out, "Retrying create directory in %d s after error: %s\n", errorRetryDelay, err.Error())
+				log.Printf("Retrying create directory in %d s after error: %s\n", errorRetryDelay, err.Error())
 				time.Sleep(errorRetryDelay)
 			} else {
 				return nil, fmt.Errorf("Failed to create directory: %s", err)
